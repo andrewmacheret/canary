@@ -1,0 +1,7 @@
+ROLE_NAME="CanaryHealthCheck"
+RULE_NAME="CanaryHealthCheck-SchedulingRule"
+RULE_EXPRESSION="rate(1 minute)"
+LAMBDA_FUNCTION_NAME="CanaryHealthCheck"
+SNS_TOPIC_NAME="CanaryHealthCheck"
+NOTIFICATION_PROTOCOL="email"
+NOTIFICATION_ENDPOINT="andrew.macheret@gmail.com"
