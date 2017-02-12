@@ -13,11 +13,11 @@ AWS_SNS_TOPIC_ARN = os.getenv('AWS_SNS_TOPIC_ARN')
 
 URLS_TO_TEST = [
   'https://pun.andrewmacheret.com',
-  'https://chess.andrewmacheret.com',
   'https://ascii-cow.andrewmacheret.com',
   'https://nhl.andrewmacheret.com',
   'https://remote-apis.andrewmacheret.com',
   'https://montyhall.andrewmacheret.com',
+  'https://64cbac0f1h.execute-api.us-east-1.amazonaws.com/v1', #chess
 ]
 
 def lambda_handler(event, context):
