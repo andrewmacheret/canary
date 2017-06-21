@@ -17,10 +17,12 @@ URLS_TO_TEST = [
   'https://nhl.andrewmacheret.com',
   'https://remote-apis.andrewmacheret.com',
   'https://montyhall.andrewmacheret.com',
-  'https://64cbac0f1h.execute-api.us-east-1.amazonaws.com/v1', #chess
+  'https://chess.andrewmacheret.com', #chess
 ]
 
 def lambda_handler(event, context):
+    
+
     failures = []
     for url in URLS_TO_TEST:
         try:
@@ -51,14 +53,7 @@ def lambda_handler(event, context):
 # --------------- Helpers that build all of the responses ----------------
 
 
-def publish_command_to_sns(failures):
-    messages = []
-    for failure in failures:
-        pp.pprint(failure)
-        messages.append('%s - %s' % (failure['url'], failure['error']))
-
-    message = '\n'.join(messages)
-
+def publish_command_to_sns(message):
     client = boto3.client('sns')
 
     response = client.publish(

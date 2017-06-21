@@ -112,4 +112,4 @@ aws lambda add-permission \
   --source-arn "$RULE_ARN"
 
 echo
-echo "Done!"
+echo 'Done!'
