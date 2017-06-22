@@ -9,36 +9,31 @@ import boto3
 
 pp = pprint.PrettyPrinter(indent=4)
 
-AWS_SNS_TOPIC_ARN = os.getenv('AWS_SNS_TOPIC_ARN')
-
-URLS_TO_TEST = [
-  'https://pun.andrewmacheret.com',
-  'https://ascii-cow.andrewmacheret.com',
-  'https://nhl.andrewmacheret.com',
-  'https://remote-apis.andrewmacheret.com',
-  'https://montyhall.andrewmacheret.com',
-  'https://chess.andrewmacheret.com', #chess
-]
-
 def lambda_handler(event, context):
-    
+    aws_sns_topic_arn = event['sns']
+    urls_to_test = event['urls']
 
     failures = []
-    for url in URLS_TO_TEST:
+    for url in urls_to_test:
         try:
-            response = get(url)
+            response = get(url, timeout=1)
             if response.status_code != 200:
                 failures.append({
                     'url': url,
                     'error': 'Status code: ' + response.status_code,
                 })
+                print(url, 'FAIL')
+            else:
+                print(url, 'PASS')
         except Exception as err:
+            print(url, 'EXCEPTION')
             pp.pprint(repr(err))
             failures.append({
                 'url': url,
                 'error': repr(err),
             })
         except:
+            print(url, 'UNKNOWN_ERROR')
             failures.append({
                 'url': url,
                 'error': 'Unknown error!',

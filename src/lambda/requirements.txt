@@ -1,2 +1,2 @@
-requests==2.7.0
-boto3==1.4.3
+requests==2.18.1
+boto3==1.4.4

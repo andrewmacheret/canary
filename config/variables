@@ -1,7 +1,27 @@
 ROLE_NAME="CanaryHealthCheck"
-RULE_NAME="CanaryHealthCheck-SchedulingRule"
-RULE_EXPRESSION="rate(1 minute)"
 LAMBDA_FUNCTION_NAME="CanaryHealthCheck"
+LAMBDA_FUNCTION_DESCRIPTION="Canary health check"
+LAMBDA_FUNCTION_TIMEOUT="30"
+LAMBDA_FUNCTION_MEMORY="128"
+LAMBDA_FUNCTION_HANDLER="main.lambda_handler"
+LAMBDA_FUNCTION_RUNTIME="python2.7"
+
+RULE_NAME="CanaryHealthCheck-SchedulingRule"
+RULE_EXPRESSION="cron(0 0 * * ? *)"
+RULE_EXPRESSION_DESCRIPTION="every day at 00:00 UTC"
+RULE_INPUT='{
+  "urls": [
+    "https://pun.andrewmacheret.com",
+    "https://chess.andrewmacheret.com",
+    "https://ascii-cow.andrewmacheret.com:9443",
+    "https://nhl.andrewmacheret.com:9443",
+    "https://remote-apis.andrewmacheret.com:9443",
+    "https://montyhall.andrewmacheret.com:9443",
+    "https://vta-tracker.andrewmacheret.com:9443"
+  ],
+  "sns": "arn:aws:sns:us-east-1:515875352897:CanaryHealthCheck"
+}'
+
 SNS_TOPIC_NAME="CanaryHealthCheck"
 NOTIFICATION_PROTOCOL="email"
 NOTIFICATION_ENDPOINT="andrew.macheret@gmail.com"

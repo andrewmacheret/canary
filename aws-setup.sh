@@ -73,20 +73,13 @@ lambda_response="$(
     --function-name "$LAMBDA_FUNCTION_NAME" 2>/dev/null || \
   aws lambda create-function \
     --function-name "$LAMBDA_FUNCTION_NAME" \
-    --runtime "python2.7" \
-    --handler "main.lambda_handler" \
+    --runtime "$LAMBDA_FUNCTION_RUNTIME" \
+    --handler "$LAMBDA_FUNCTION_HANDLER" \
     --role "$ROLE_ARN" \
     --zip-file "fileb://lambda-build.zip"
 )"
-LAMBDA_FUNCTION_ARN=$( echo $lambda_response | python -c "import sys, json; print(json.load(sys.stdin)['FunctionArn'])" )
+LAMBDA_FUNCTION_ARN=$( echo $lambda_response | python -c "import sys, json; x=json.load(sys.stdin); print(x.get('Configuration',x)['FunctionArn'])" )
 echo "export LAMBDA_FUNCTION_ARN=$LAMBDA_FUNCTION_ARN" >> .env
-
-# Update lambda function to include AWS_SNS_TOPIC_ARN
-echo
-echo "Updating $LAMBDA_FUNCTION_NAME with variable AWS_SNS_TOPIC_ARN=$AWS_SNS_TOPIC_ARN ..."
-aws lambda update-function-configuration \
-  --function-name "$LAMBDA_FUNCTION_NAME" \
-  --environment "Variables={AWS_SNS_TOPIC_ARN=$AWS_SNS_TOPIC_ARN}"
 
 # Create scheduling rule for lambda function (and store ARN in .env)
 echo
@@ -94,7 +87,7 @@ echo "Creating scheduling rule for lambda function ..."
 aws events put-rule \
   --name "$RULE_NAME" \
   --schedule-expression "$RULE_EXPRESSION" \
-  --description "$RULE_EXPRESSION"
+  --description "$RULE_EXPRESSION_DESCRIPTION"
 rule_response="$(
   aws events describe-rule \
     --name "$RULE_NAME"
@@ -110,6 +103,13 @@ aws lambda add-permission \
   --action lambda:invokeFunction \
   --principal events.amazonaws.com \
   --source-arn "$RULE_ARN"
+aws events put-targets \
+  --rule "$RULE_NAME" \
+  --targets '{
+    "Id": "1",
+    "Arn": "'"$LAMBDA_FUNCTION_ARN"'",
+    "Input": "'"$( echo "$RULE_INPUT" | python -c 'import sys, json; print(json.dumps(json.load(sys.stdin)))' | perl -p -e 's/\\/\\\\/g' | perl -p -e 's/"/\\"/g' )"'"
+}'
 
 echo
 echo 'Done!'
