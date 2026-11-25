@@ -1,3 +1,5 @@
 andrewmacheret.com
 nhl-client
 nhl-server-lambda
+goalie
+miler-lite
