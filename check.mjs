@@ -99,22 +99,42 @@ function annotate(title, message) {
   console.log(`::error title=${escape(title).replace(/:/g, '%3A').replace(/,/g, '%2C')}::${escape(message)}`);
 }
 
-function report(result) {
+function passed(result) {
   const checks = result.checks || [];
-  const lines = checks.map((c) => `${c.ok ? '✅' : '❌'} ${c.name}${c.detail ? `: ${c.detail}` : ''}`);
-  console.log(`${url}\n${lines.join('\n')}`);
-  for (const c of checks.filter((c) => !c.ok)) annotate(c.name, c.detail || 'failed');
-  if (process.env.GITHUB_STEP_SUMMARY) {
-    appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### ${url}\n\n${lines.map((l) => `- ${l}`).join('\n')}\n`);
-  }
   return result.status === 'ok' && checks.length > 0 && checks.every((c) => c.ok);
 }
 
-try {
-  process.exitCode = report(await check(url)) ? 0 : 1;
-} catch (err) {
-  // Node's "fetch failed" keeps the real reason, like ENOTFOUND, in err.cause
-  const reason = err.cause ? ` (${err.cause.code || err.cause.message})` : '';
-  annotate('Health check failed', `${url}: ${err.message}${reason}`);
-  process.exitCode = 1;
+function lines(result) {
+  return (result.checks || []).map((c) => `${c.ok ? '✅' : '❌'} ${c.name}${c.detail ? `: ${c.detail}` : ''}`);
 }
+
+function report(result) {
+  console.log(`${url}\n${lines(result).join('\n')}`);
+  for (const c of (result.checks || []).filter((c) => !c.ok)) annotate(c.name, c.detail || 'failed');
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### ${url}\n\n${lines(result).map((l) => `- ${l}`).join('\n')}\n`);
+  }
+}
+
+// Returns the health check's result, or { error } if it couldn't be read at all
+async function attempt() {
+  try {
+    return await check(url);
+  } catch (err) {
+    // Node's "fetch failed" keeps the real reason, like ENOTFOUND, in err.cause
+    const reason = err.cause ? ` (${err.cause.code || err.cause.message})` : '';
+    return { error: `${url}: ${err.message}${reason}` };
+  }
+}
+
+// Cold Lambdas and busy third parties sometimes time out once, so a check
+// only counts as broken if it fails twice in a row
+let result = await attempt();
+if (!passed(result)) {
+  console.log(`First try failed, trying again in 30 seconds:\n${result.error || lines(result).join('\n')}\n`);
+  await new Promise((resolve) => setTimeout(resolve, 30_000));
+  result = await attempt();
+}
+if (result.error) annotate('Health check failed', result.error);
+else report(result);
+process.exitCode = passed(result) ? 0 : 1;
