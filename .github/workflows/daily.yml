@@ -1,8 +1,8 @@
 name: Daily
 
+# Started once a day by Lambda CanaryDispatch in AWS (see lambda/). It's not a GitHub schedule,
+# since GitHub turns those off after 60 days without a commit.
 on:
-  schedule:
-    - cron: '0 15 * * *'
   workflow_dispatch:
 
 permissions:
@@ -13,8 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      # Each repo's canary.yml only has a workflow_dispatch trigger, so GitHub's
-      # 60-day inactivity rule (which only stops schedules) doesn't apply to it
       - name: Start each repo's canary
         env:
           GH_TOKEN: ${{ secrets.CANARY_TOKEN }}
@@ -29,13 +27,3 @@ jobs:
             fi
           done < repos.txt
           exit $failed
-      # This schedule stops if the repo goes 60 days without a commit
-      - name: Check this repo had a commit in the last 45 days
-        if: always()
-        run: |
-          days=$(( ($(date +%s) - $(git log -1 --format=%ct)) / 86400 ))
-          echo "last commit was $days days ago"
-          if [ "$days" -gt 45 ]; then
-            echo "::error title=Push to canary::No commit in $days days. GitHub stops this schedule at 60."
-            exit 1
-          fi
