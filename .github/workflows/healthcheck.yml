@@ -1,0 +1,28 @@
+name: Health check
+
+# Each project's canary.yml calls this with its health check URL
+on:
+  workflow_call:
+    inputs:
+      url:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  healthcheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          repository: andrewmacheret/canary
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      # The runner already has Google Chrome, which check.mjs uses for static sites
+      - run: node check.mjs "$URL"
+        env:
+          URL: ${{ inputs.url }}
