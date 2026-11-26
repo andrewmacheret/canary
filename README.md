@@ -7,7 +7,7 @@ Daily health checks for my web projects and Lambdas. Each project has a `/health
 ## How it works
 
 1. Every day at 15:00 UTC, EventBridge Scheduler (`CanaryDaily`) runs the Lambda in `lambda/` (`CanaryDispatch`) in AWS. It starts `.github/workflows/daily.yml`.
-2. `daily.yml` starts the `canary.yml` workflow in every repo listed in `repos.txt`.
+2. `daily.yml` starts the `canary.yml` workflow in every repo listed in `repos.txt`. It also starts `homebrew-tap`'s `update.yml`, which points the tap at the latest releases.
 3. Each repo's `canary.yml` calls `.github/workflows/healthcheck.yml` here with its health check URL.
 4. `check.mjs` reads the health check and fails if anything in it is broken. It tries again after 30 seconds before failing, since cold Lambdas sometimes time out once.
 

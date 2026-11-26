@@ -27,3 +27,9 @@ jobs:
             fi
           done < repos.txt
           exit $failed
+      # Points homebrew-tap's casks and formulae at the latest releases
+      - name: Start homebrew-tap's update
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ secrets.CANARY_TOKEN }}
+        run: gh workflow run update.yml --repo andrewmacheret/homebrew-tap
