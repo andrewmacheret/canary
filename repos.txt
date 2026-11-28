@@ -16,6 +16,7 @@ pun-server-lambda
 live-earth
 vta-tracker-lambda
 no-drone-zones
-i5-web
+i5-client
+i5-server-lambdas
 i5-android
 i5-macos-menubar
